@@ -1,6 +1,15 @@
 
-
+#include <Arduino.h>
 #include <Ps3Controller.h>
+
+
+#define sig_pwm_tracao 2
+#define sig_frente     4
+#define sig_re         5
+
+#define sig_dir_esq    18
+#define sig_dir_dir    19
+#define sig_pwm_dir    21
 
 int player = 0;
 int battery = 0;
@@ -62,14 +71,29 @@ void notify()
 
     //-------------- Digital trigger button events -------------
     if( Ps3.event.button_down.l2 )
+    {
         Serial.println("Started pressing the left trigger button");
+        digitalWrite(sig_re,1);
+    }
+        
     if( Ps3.event.button_up.l2 )
+    {
         Serial.println("Released the left trigger button");
+        digitalWrite(sig_re,0);
+    }
+        
 
     if( Ps3.event.button_down.r2 )
+    {
         Serial.println("Started pressing the right trigger button");
+        digitalWrite(sig_frente,1);
+    }
+        
     if( Ps3.event.button_up.r2 )
+    {
         Serial.println("Released the right trigger button");
+        digitalWrite(sig_frente,0);
+    }
 
     //--------------- Digital stick button events --------------
     if( Ps3.event.button_down.l3 )
@@ -103,9 +127,23 @@ void notify()
    if( abs(Ps3.event.analog_changed.stick.lx) + abs(Ps3.event.analog_changed.stick.ly) > 2 ){
        Serial.print("Moved the left stick:");
        Serial.print(" x="); Serial.print(Ps3.data.analog.stick.lx, DEC);
+       if (Ps3.data.analog.stick.lx>0)
+       { 
+           digitalWrite(sig_dir_dir,1);
+           digitalWrite(sig_dir_esq,0);
+
+       }
+       else
+       {
+           digitalWrite(sig_dir_dir,0);
+           digitalWrite(sig_dir_esq,1);
+       }
+       ledcWrite(1, (Ps3.data.analog.stick.lx+(int8_t)128)/2);
        Serial.print(" y="); Serial.print(Ps3.data.analog.stick.ly, DEC);
        Serial.println();
     }
+    else 
+        ledcWrite(1,0);
 
    if( abs(Ps3.event.analog_changed.stick.rx) + abs(Ps3.event.analog_changed.stick.ry) > 2 ){
        Serial.print("Moved the right stick:");
@@ -149,11 +187,13 @@ void notify()
    if( abs(Ps3.event.analog_changed.button.l2) ){
        Serial.print("Pressing the left trigger button: ");
        Serial.println(Ps3.data.analog.button.l2, DEC);
+       ledcWrite(0, Ps3.data.analog.button.l2);
    }
 
    if( abs(Ps3.event.analog_changed.button.r2) ){
        Serial.print("Pressing the right trigger button: ");
        Serial.println(Ps3.data.analog.button.r2, DEC);
+       ledcWrite(0, Ps3.data.analog.button.r2);
    }
 
    //---- Analog cross/square/triangle/circle button events ----
@@ -204,6 +244,15 @@ void setup()
     Ps3.attachOnConnect(onConnect);
     Ps3.begin("98:83:89:8d:74:b6");
 
+    pinMode(sig_frente,OUTPUT);
+    pinMode(sig_re,OUTPUT);
+    pinMode(sig_dir_esq,OUTPUT);
+    pinMode(sig_dir_dir,OUTPUT);
+
+    ledcSetup(0, 2500, 8);
+    ledcAttachPin(sig_pwm_tracao, 0);
+    ledcSetup(1, 2500, 8);
+    ledcAttachPin(sig_pwm_dir, 1);
     Serial.println("Ready.");
 }
 
@@ -212,31 +261,6 @@ void loop()
     if(!Ps3.isConnected())
         return;
 
-    //-------------------- Player LEDs -------------------
-    Serial.print("Setting LEDs to player "); Serial.println(player, DEC);
-    Ps3.setPlayer(player);
-    player += 1;
-    if(player > 10) player = 0;
-
-
-    //------ Digital cross/square/triangle/circle buttons ------
-    if( Ps3.data.button.cross && Ps3.data.button.down )
-        Serial.println("Pressing both the down and cross buttons");
-    if( Ps3.data.button.square && Ps3.data.button.left )
-        Serial.println("Pressing both the square and left buttons");
-    if( Ps3.data.button.triangle && Ps3.data.button.up )
-        Serial.println("Pressing both the triangle and up buttons");
-    if( Ps3.data.button.circle && Ps3.data.button.right )
-        Serial.println("Pressing both the circle and right buttons");
-
-    if( Ps3.data.button.l1 && Ps3.data.button.r1 )
-        Serial.println("Pressing both the left and right bumper buttons");
-    if( Ps3.data.button.l2 && Ps3.data.button.r2 )
-        Serial.println("Pressing both the left and right trigger buttons");
-    if( Ps3.data.button.l3 && Ps3.data.button.r3 )
-        Serial.println("Pressing both the left and right stick buttons");
-    if( Ps3.data.button.select && Ps3.data.button.start )
-        Serial.println("Pressing both the select and start buttons");
-
+    
     delay(2000);
 }
