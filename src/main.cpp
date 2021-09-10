@@ -11,6 +11,8 @@
 #define sig_dir_dir    19
 #define sig_pwm_dir    21
 
+#define sig_farol      13
+
 int player = 0;
 int battery = 0;
 
@@ -28,7 +30,10 @@ void notify()
         Serial.println("Released the square button");
 
     if( Ps3.event.button_down.triangle )
+    {
         Serial.println("Started pressing the triangle button");
+        digitalWrite(sig_farol,!digitalRead(sig_farol));
+    }
     if( Ps3.event.button_up.triangle )
         Serial.println("Released the triangle button");
 
@@ -248,6 +253,7 @@ void setup()
     pinMode(sig_re,OUTPUT);
     pinMode(sig_dir_esq,OUTPUT);
     pinMode(sig_dir_dir,OUTPUT);
+    pinMode(sig_farol,OUTPUT);
 
     ledcSetup(0, 2500, 8);
     ledcAttachPin(sig_pwm_tracao, 0);
