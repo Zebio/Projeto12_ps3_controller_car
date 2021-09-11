@@ -143,12 +143,12 @@ void notify()
            digitalWrite(sig_dir_dir,0);
            digitalWrite(sig_dir_esq,1);
        }
-       ledcWrite(1, (Ps3.data.analog.stick.lx+(int8_t)128)/2);
+       ledcWrite(1, Ps3.data.analog.stick.lx+(int8_t)128);
        Serial.print(" y="); Serial.print(Ps3.data.analog.stick.ly, DEC);
        Serial.println();
     }
-    else 
-        ledcWrite(1,0);
+  //  else 
+    //    ledcWrite(1,0);
 
    if( abs(Ps3.event.analog_changed.stick.rx) + abs(Ps3.event.analog_changed.stick.ry) > 2 ){
        Serial.print("Moved the right stick:");
